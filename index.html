@@ -1,0 +1,210 @@
+<html>
+  <head>
+    <title>Create a new Wine Quiz card</title>
+    <link href="http://www.stackmob.com/platform/favicon.ico" type="image/vnd.microsoft.icon" rel="icon" />
+    <link href="http://www.stackmob.com/platform/favicon.png" type="image/png" rel="icon" />
+    <link rel="stylesheet" href="index.css" />
+
+     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script type="text/javascript" src="http://static.stackmob.com/js/stackmob-js-0.6.1-bundled-min.js"></script>
+
+  <script type="text/javascript">
+
+$(document).ready(function() {
+    $(".error").hide();
+    $(".success").hide();
+    $(".loading").hide();
+    loadCategories();
+
+    currentlyLoggedInUser = StackMob.getLoggedInUser();
+    if(currentlyLoggedInUser != null & new StackMob.User({ username: currentlyLoggedInUser }).isLoggedIn()) {
+      $(".login").hide();
+      $(".logout").show();
+      $(".input").show();
+      $(".logout a").text("Logout "+currentlyLoggedInUser);
+      }
+      else {
+        $(".login").show();
+        $(".logout").hide();
+        $(".input").hide();
+      }
+});
+
+/* development public key */
+//publicKey: '808f8a8d-8c4b-48d3-948b-639ce550595c',
+
+StackMob.init({
+appName: 'winequiz',
+clientSubdomain: 'ciryonmaccom',
+publicKey: '1fa23f54-c844-435d-89bf-d78b5915b377',
+apiVersion : 1
+});
+
+var Card = StackMob.Model.extend({
+schemaName : 'card' 
+});
+
+var loadingOn = function() {
+  $(".error").hide();
+  $(".success").hide();
+  $(".content").hide();
+  $(".loading").show();
+}
+
+var loadingOff = function() {
+
+  $(".content").show();
+  $(".loading").hide();
+}
+
+var createcard = function() {
+  loadingOn();
+  var categoryId = $('select').find(":selected").val();
+
+  var card = new Card({
+question : $("#questionField").val(),
+answer : $("#answerField").val(),
+category : categoryId
+});
+
+
+card.create({
+success : function(model) {
+console.debug(model.toJSON());
+loadingOff();
+$(".error").hide();
+$(".success").show();
+  $('.success').delay(1000).fadeOut('slow', function() {
+    //$(".success").hide();
+    });
+$("#questionField").val("");
+$("#answerField").val("");
+
+},
+error : function(model, response) {
+loadingOff();
+$(".error").show();
+$(".success").hide();
+console.debug("Error while creating object!");
+$(".error p").text(response['error']);
+console.debug(response);
+}
+});
+}
+
+var loadCategories = function() {
+  var Category = StackMob.Model.extend({
+    schemaName: 'category'
+  });
+  var Categories = StackMob.Collection.extend({
+    model: Category
+  });
+  var categories = new Categories();
+ 
+var q = new StackMob.Collection.Query();
+categories.query(q, {
+  success: function(collection) {
+  html = "";
+  collection.forEach(function(item) {
+    html += "<option value='" + item['id'] + "'>"+ item['attributes']['name'] + "</option>";
+
+    });
+    $('select').append(html);
+  }
+});
+
+}
+
+var login = function() {
+  loadingOn();
+  username = $("#usernameField").val();
+  password = $("#passwordField").val();
+var user = new StackMob.User({ username: username, password: password });
+user.login(false, {
+success: function(model) {
+loadingOff();
+  $(".login").hide();
+  $(".logout").show();
+      $(".logout a").text("Logout "+username);
+      $(".input").show();
+  console.debug("Login success!");
+},
+error: function(model, response) {
+loadingOff();
+
+      $(".input").hide();
+  console.debug("Login failed: "+response);
+  alert("Login failed!");
+}
+});
+ 
+};
+
+var logout = function() {
+  loadingOn();
+  var user = new StackMob.User({ username: 'ciryon'});
+  user.logout({success: function(model) {
+        loadingOff();
+        $(".login").show();
+        $(".logout").hide();
+      $(".input").hide();
+        },error: function(model) {
+        loadingOff();
+        alert("Logout failed");
+      }
+});
+}
+
+</script>
+
+  </head>
+  <body>
+
+    <div class="loading">
+      <img src="images/ajax-loader.gif"> 
+      <br/>
+      <br/>
+      Please wait...
+    </div>
+    <div class="content">
+      <div class="header">
+        <h2>Wine Quiz</h2>
+      </div>
+      <div class="login">
+        <input type="text" id="usernameField" name="username" placeholder="Username">
+        <input type="password" id="passwordField" name="password" placeholder="Password">
+        <a class="button" href="javascript:void(0);" onClick="login();">Login</a>
+      </div>
+
+      <div class="logout">
+        <a class="button" href="javascript:void(0);" onClick="logout();">Logout</a>
+      </div>
+
+      <div class="input">
+        <select name="categorySelect">
+
+        </select>
+
+        <p>Question:</p>
+        <textarea rows=5 cols=35 name="question" id="questionField" ></textarea>
+        <br/>
+        <br/>
+        <p>Answer:</p>
+        <textarea rows=5 cols=35 name="answer" id="answerField" ></textarea>
+
+        <br/>
+        <br/>
+        <a class="button" href="javascript:void(0);" onClick="createcard();">Create</a>
+      </div>
+      <div class="success">
+        <h1>Success</h1>
+      </div>
+
+      <div class="error">
+        <h1>Error</h1>
+        <p>
+        </p>
+      </div>
+  </div>
+  </body>
+</html>

@@ -161,6 +161,8 @@ var logout = function() {
 
 var fix_categories = function (category) {
   
+  return;
+
   if(category['attributes']['name'] === "Portugal") {
 
   console.debug("category:"+category['id']);
@@ -172,7 +174,7 @@ var fix_categories = function (category) {
   var cards = new Cards();
  
   var q = new StackMob.Collection.Query();
-  categories.query(q, {
+  category.query(q, {
     success: function(collection) {
 
       console.debug("cards: "+collection);
